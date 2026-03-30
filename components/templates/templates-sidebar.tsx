@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Link } from 'next-view-transitions'
 
 import {
@@ -20,18 +20,93 @@ import { templates } from '@/constants/templates'
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const parts = pathname.split('/').filter(Boolean)
+  const selectedCategory = parts[1]
+  const selectedSlug = parts[2]
+  const selectedFlow = searchParams.get('flow') ?? 'sign-in'
+
+  const visibleTemplates = selectedSlug
+    ? templates.filter((item) => item.path.endsWith(`/${selectedCategory}`))
+    : templates
+
+  const isShadcnAuthPage =
+    selectedCategory === 'authentication' && selectedSlug === 'shadcn-auth'
+  const isClerkAuthPage =
+    selectedCategory === 'authentication' && selectedSlug === 'clerk-auth'
+
+  const shadcnAuthFlows = [
+    {
+      title: 'Login',
+      path: '/templates/authentication/shadcn-auth?flow=sign-in',
+      flow: 'sign-in',
+    },
+    {
+      title: 'Sign Up',
+      path: '/templates/authentication/shadcn-auth?flow=sign-up',
+      flow: 'sign-up',
+    },
+    {
+      title: 'Forgot Password',
+      path: '/templates/authentication/shadcn-auth?flow=forgot-password',
+      flow: 'forgot-password',
+    },
+    {
+      title: 'Reset Password',
+      path: '/templates/authentication/shadcn-auth?flow=reset-password',
+      flow: 'reset-password',
+    },
+  ]
+
+  const clerkAuthFlows = [
+    {
+      title: 'Login',
+      path: '/templates/authentication/clerk-auth?flow=sign-in',
+      flow: 'sign-in',
+    },
+    {
+      title: 'Sign Up',
+      path: '/templates/authentication/clerk-auth?flow=sign-up',
+      flow: 'sign-up',
+    },
+    {
+      title: 'Forgot Password',
+      path: '/templates/authentication/clerk-auth?flow=forgot-password',
+      flow: 'forgot-password',
+    },
+    {
+      title: 'Reset Password',
+      path: '/templates/authentication/clerk-auth?flow=reset-password',
+      flow: 'reset-password',
+    },
+  ]
+
+  const selectedFlowTemplate = isShadcnAuthPage
+    ? {
+        title: 'Shadcn Auth Pages',
+        path: '/templates/authentication/shadcn-auth?flow=sign-in',
+        sub: shadcnAuthFlows,
+      }
+    : isClerkAuthPage
+      ? {
+          title: 'Clerk Auth Pages',
+          path: '/templates/authentication/clerk-auth?flow=sign-in',
+          sub: clerkAuthFlows,
+        }
+      : null
+
   return (
-    <Sidebar className="sticky">
-      <SidebarContent>
-        <SidebarGroup>
+    <Sidebar className="sticky top-4 h-[calc(100svh-6.5rem)]">
+      <SidebarContent className="h-full">
+        <SidebarGroup className="h-full">
           <SidebarMenu>
-            {templates.map((item) => (
+            {(selectedFlowTemplate
+              ? [selectedFlowTemplate]
+              : visibleTemplates
+            ).map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <Link
-                    href={item.path}
-                    className="font-semibold pointer-events-none"
-                  >
+                  <Link href={item.path} className="font-semibold">
                     {item.title}
                   </Link>
                 </SidebarMenuButton>
@@ -44,11 +119,14 @@ export function AppSidebar() {
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton
                           asChild
-                          isActive={pathname === subItem.path}
+                          isActive={
+                            selectedFlowTemplate
+                              ? 'flow' in subItem &&
+                                subItem.flow === selectedFlow
+                              : pathname === subItem.path
+                          }
                         >
-                          <Link href={subItem.path} className="capitalize">
-                            {subItem.title}
-                          </Link>
+                          <Link href={subItem.path}>{subItem.title}</Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
